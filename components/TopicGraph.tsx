@@ -4,9 +4,10 @@ import { TopicData } from '../types';
 
 interface TopicGraphProps {
   data: TopicData;
+  isDark?: boolean;
 }
 
-export const TopicGraph: React.FC<TopicGraphProps> = ({ data }) => {
+export const TopicGraph: React.FC<TopicGraphProps> = ({ data, isDark }) => {
   const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
@@ -24,7 +25,7 @@ export const TopicGraph: React.FC<TopicGraphProps> = ({ data }) => {
       .force("collide", d3.forceCollide().radius((d: any) => d.val * 3));
 
     const link = svg.append("g")
-      .attr("stroke", "#94a3b8")
+      .attr("stroke", isDark ? "#475569" : "#94a3b8")
       .attr("stroke-opacity", 0.4)
       .selectAll("line")
       .data(data.links)
@@ -32,7 +33,7 @@ export const TopicGraph: React.FC<TopicGraphProps> = ({ data }) => {
       .attr("stroke-width", 1);
 
     const node = svg.append("g")
-      .attr("stroke", "#fff")
+      .attr("stroke", isDark ? "#1e293b" : "#fff")
       .attr("stroke-width", 1.5)
       .selectAll("circle")
       .data(data.nodes)
@@ -43,20 +44,20 @@ export const TopicGraph: React.FC<TopicGraphProps> = ({ data }) => {
 
     node.append("title")
       .text((d: any) => d.id);
-    
+
     // Labels
     const labels = svg.append("g")
-        .attr("class", "labels")
-        .selectAll("text")
-        .data(data.nodes)
-        .enter()
-        .append("text")
-        .attr("text-anchor", "middle")
-        .attr("fill", "#475569")
-        .style("font-size", "8px")
-        .style("font-weight", "500")
-        .style("pointer-events", "none")
-        .text((d: any) => d.val > 4 ? d.id : "");
+      .attr("class", "labels")
+      .selectAll("text")
+      .data(data.nodes)
+      .enter()
+      .append("text")
+      .attr("text-anchor", "middle")
+      .attr("fill", isDark ? "#94a3b8" : "#475569")
+      .style("font-size", "8px")
+      .style("font-weight", "500")
+      .style("pointer-events", "none")
+      .text((d: any) => d.val > 4 ? d.id : "");
 
     simulation.on("tick", () => {
       link
@@ -68,7 +69,7 @@ export const TopicGraph: React.FC<TopicGraphProps> = ({ data }) => {
       node
         .attr("cx", (d: any) => d.x)
         .attr("cy", (d: any) => d.y);
-      
+
       labels
         .attr("x", (d: any) => d.x)
         .attr("y", (d: any) => d.y - 8);
@@ -97,12 +98,12 @@ export const TopicGraph: React.FC<TopicGraphProps> = ({ data }) => {
         .on("drag", dragged)
         .on("end", dragended);
     }
-  }, [data]);
+  }, [data, isDark]);
 
   return (
     <div className="w-full h-full flex flex-col">
-       <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 px-2">Topic Cluster</h4>
-       <svg ref={svgRef} viewBox="0 0 300 300" className="w-full h-auto bg-slate-50/50 rounded-2xl border border-slate-100" />
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 px-2">Topic Cluster</h4>
+      <svg ref={svgRef} viewBox="0 0 300 300" className="w-full h-auto bg-slate-50/50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800" />
     </div>
   );
 };
