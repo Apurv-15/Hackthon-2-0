@@ -1,14 +1,31 @@
 import React, { useState } from 'react';
 import { Book } from '../types';
+import { generateSlug } from '../services/slugService';
 
-export const BookCard: React.FC<{ book: Book }> = ({ book }) => {
+interface BookCardProps {
+  book: Book;
+  onClick?: (slug: string) => void;
+}
+
+export const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
   const [imgError, setImgError] = useState(false);
   const coverUrl = book.coverId 
     ? `https://covers.openlibrary.org/b/id/${book.coverId}-M.jpg` 
     : null;
+  
+  const slug = generateSlug(book.id, book.title);
+  
+  const handleClick = () => {
+    if (onClick) {
+      onClick(slug);
+    }
+  };
 
   return (
-    <div className="group relative bg-white/80 backdrop-blur-xl border border-white/40 p-4 rounded-3xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover-lift transition-all duration-300 h-full">
+    <div
+      className="group relative bg-white/80 backdrop-blur-xl border border-white/40 p-4 rounded-3xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover-lift transition-all duration-300 h-full cursor-pointer"
+      onClick={handleClick}
+    >
         <div className="flex gap-4 h-full">
             {/* Cover Image Container */}
             <div className="shrink-0 w-24 h-36 bg-slate-100 rounded-lg overflow-hidden shadow-inner relative">

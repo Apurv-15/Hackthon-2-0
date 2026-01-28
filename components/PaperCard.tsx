@@ -1,9 +1,26 @@
 import React from 'react';
 import { Paper } from '../types';
+import { generateSlug } from '../services/slugService';
 
-export const PaperCard: React.FC<{ paper: Paper }> = ({ paper }) => {
+interface PaperCardProps {
+  paper: Paper;
+  onClick?: (slug: string) => void;
+}
+
+export const PaperCard: React.FC<PaperCardProps> = ({ paper, onClick }) => {
+  const slug = generateSlug(paper.id, paper.title);
+  
+  const handleClick = () => {
+    if (onClick) {
+      onClick(slug);
+    }
+  };
+
   return (
-    <div className="group relative bg-white/80 backdrop-blur-xl border border-white/40 p-6 rounded-3xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover-lift transition-all duration-300 flex flex-col h-full">
+    <div
+      className="group relative bg-white/80 backdrop-blur-xl border border-white/40 p-6 rounded-3xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover-lift transition-all duration-300 flex flex-col h-full cursor-pointer"
+      onClick={handleClick}
+    >
       {/* Top Badge */}
       <div className="flex justify-between items-start mb-3">
         <span className="px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase text-blue-600 bg-blue-50 rounded-lg">

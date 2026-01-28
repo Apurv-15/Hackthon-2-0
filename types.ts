@@ -66,3 +66,9 @@ export interface TopicData {
   nodes: TopicNode[];
   links: TopicLink[];
 }
+
+export interface RouteState {
+  type: 'home' | 'detail';
+  itemId?: string;
+  itemType?: ResourceType;
+}

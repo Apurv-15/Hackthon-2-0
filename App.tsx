@@ -2,9 +2,17 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Hero } from './components/Hero';
 import { PaperCard } from './components/PaperCard';
 import { BookCard } from './components/BookCard';
+import { PaperPage } from './components/PaperPage';
+import { BookPage } from './components/BookPage';
 import { TopicGraph } from './components/TopicGraph';
 import { searchResources, debounce, generateTopicData } from './services/discoveryService';
-import { UnifiedResult, ResourceType, TopicData } from './types';
+import { UnifiedResult, ResourceType, TopicData, Paper, Book } from './types';
+import { generateSlug } from './services/slugService';
+
+type ViewState = 
+  | { type: 'home' }
+  | { type: 'paper'; item: Paper; slug: string }
+  | { type: 'book'; item: Book; slug: string };
 
 function App() {
   const [query, setQuery] = useState('');
@@ -13,6 +21,7 @@ function App() {
   const [hasSearched, setHasSearched] = useState(false);
   const [topicData, setTopicData] = useState<TopicData>({ nodes: [], links: [] });
   const [activeFilter, setActiveFilter] = useState<'all' | 'paper' | 'book'>('all');
+  const [currentView, setCurrentView] = useState<ViewState>({ type: 'home' });
 
   // Debounced search
   const performSearch = useCallback(
@@ -41,9 +50,57 @@ function App() {
     setQuery('');
     setResults([]);
     setHasSearched(false);
+    setCurrentView({ type: 'home' });
+    window.history.pushState({}, '', window.location.pathname);
   };
 
+  const handleCardClick = (slug: string) => {
+    const item = results.find(r => {
+      const itemSlug = generateSlug(r.id, r.title);
+      return itemSlug === slug;
+    });
+    
+    if (item) {
+      window.history.pushState({ slug, type: item.type }, '', `#/${item.type}/${slug}`);
+      if (item.type === ResourceType.Paper) {
+        setCurrentView({ type: 'paper', item: item as Paper, slug });
+      } else {
+        setCurrentView({ type: 'book', item: item as Book, slug });
+      }
+      window.scrollTo(0, 0);
+    }
+  };
+
+  const goBack = () => {
+    window.history.pushState({}, '', window.location.pathname);
+    setCurrentView({ type: 'home' });
+  };
+
+  // Handle browser back/forward
+  useEffect(() => {
+    const handlePopState = () => {
+      const hash = window.location.hash;
+      if (!hash || hash === '#/') {
+        setCurrentView({ type: 'home' });
+      }
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   const filteredResults = results.filter(r => activeFilter === 'all' || r.type === activeFilter);
+
+  // Render detail pages
+  if (currentView.type === 'paper') {
+    return <PaperPage paper={currentView.item} onBack={goBack} />;
+  }
+
+  if (currentView.type === 'book') {
+    return <BookPage book={currentView.item} onBack={goBack} />;
+  }
+
+  // Render home/search view
 
   return (
     <div className="min-h-screen pb-20 selection:bg-blue-100 selection:text-blue-900">
@@ -196,9 +253,9 @@ function App() {
                                    {filteredResults.map((item) => (
                                        <div key={item.id}>
                                             {item.type === ResourceType.Paper ? (
-                                                <PaperCard paper={item as any} />
+                                                <PaperCard paper={item as Paper} onClick={handleCardClick} />
                                             ) : (
-                                                <BookCard book={item as any} />
+                                                <BookCard book={item as Book} onClick={handleCardClick} />
                                             )}
                                        </div>
                                    ))}
