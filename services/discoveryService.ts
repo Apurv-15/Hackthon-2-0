@@ -49,9 +49,9 @@ function reconstructAbstract(invertedIndex: Record<string, number[]>): string {
   return words.join(' ').slice(0, 200) + '...';
 }
 
-async function fetchBooks(query: string): Promise<Book[]> {
+async function fetchBooks(query: string, limit: number = 10): Promise<Book[]> {
   try {
-    const response = await fetch(`${OPENLIBRARY_API}?q=${encodeURIComponent(query)}&limit=10`);
+    const response = await fetch(`${OPENLIBRARY_API}?q=${encodeURIComponent(query)}&limit=${limit}`);
     if (!response.ok) throw new Error('OpenLibrary API Error');
     const data = await response.json();
 
@@ -69,6 +69,35 @@ async function fetchBooks(query: string): Promise<Book[]> {
     }));
   } catch (error) {
     console.error("Error fetching books:", error);
+    return [];
+  }
+}
+
+// Fetch featured/popular books for homepage
+export async function fetchFeaturedBooks(): Promise<Book[]> {
+  try {
+    // Fetch popular subjects for variety
+    const subjects = ['science', 'technology', 'history', 'philosophy', 'mathematics', 'physics'];
+    const randomSubject = subjects[Math.floor(Math.random() * subjects.length)];
+    
+    const response = await fetch(`${OPENLIBRARY_API}?q=subject:${randomSubject}&limit=24&sort=editions`);
+    if (!response.ok) throw new Error('OpenLibrary API Error');
+    const data = await response.json();
+
+    return data.docs.map((item: any) => ({
+      id: item.key,
+      type: ResourceType.Book,
+      title: item.title,
+      authors: item.author_name?.map((name: string) => ({ name })) || [],
+      year: item.first_publish_year,
+      publisher: item.publisher?.[0],
+      editionCount: item.edition_count || 1,
+      coverId: item.cover_i,
+      subjects: item.subject?.slice(0, 3) || [],
+      rating: item.ratings_average ? Math.round(item.ratings_average * 10) / 10 : undefined
+    }));
+  } catch (error) {
+    console.error("Error fetching featured books:", error);
     return [];
   }
 }
